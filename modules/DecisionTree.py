@@ -1,81 +1,88 @@
 import numpy as np
 from math import log2
-import scipy.stats
 import pprint
 
 class DecisionTree:
-  def __init__(self, criterion='entropy', maxDepth=None):
-    criterionList = ['gini', 'entropy']
-
-    if criterion not in criterionList:
-      raise ValueError('the criterion parameter mort be one of: %s' % criterionList)
-    if isinstance(maxDepth, int) == False and maxDepth is not None:
-      raise ValueError('maxDepth should be an int.')
-    self.criterion = criterion
-    self.maxDepth = maxDepth
+  def __init__(self):
+    self.priorEntropy = None
 
   def __transformDataIntoList(self, data):
     return [list(instance) for instance in data]
+
+  def __extractTargetFromDataset(self, data):
+    newDataset = list()
+    target = list()
+    for instance in data:
+      target.append(instance[len(instance) - 1])
+      newDataset.append(instance[:-1])
+    return newDataset, target
 
   # Add the target label at the end of the dataset. Needed to shuffle the data easily.
   def __concateTargetWithDataset(self, dataset, targetDataset):
     data = list()
     for index, instance in enumerate(dataset):
-      tmp = list(instance)
+      tmp = list()
+      if type(instance) is not list:
+        tmp.append(instance)
+      else:
+        tmp = list(instance)
       tmp.append(targetDataset[index])
       data.append(tmp)
     return data
+
+  def __countUniqueValue(self, data):
+    return list(set(data))
 
   # Divide data by class.
   def __classSpliter(self, data, target):
     splitedClasses = dict()
 
-    for index, target in enumerate(data):
+    for index, value in enumerate(data):
       # Create new key in dict if class not already created.
       if target[index] not in splitedClasses:
         splitedClasses[target[index]] = list()
       # Add the instance to the corresponding class.
-      splitedClasses[target[index]].append(target)
-    return splitedClasses
+      splitedClasses[target[index]].append(value)
+    return splitedClasses  
 
-  def __countUniqueProduct(self, data):
-    return list(set(data))
-
-  def __getEntropy(self, dataset, classes, clas):
+  def __getEntropy(self, dataset, clas):
     nbInstances = len(dataset)
     nbOccurence = dataset.count(clas)
     ratio = nbOccurence / nbInstances
     return (-ratio * log2(ratio))
 
-  def __getGain(self, dataset, uniqueValues, priorEntropy):
-    for value in uniqueValues:
-k      pass
+  def __createTree(self, data, target, classesInfo):
+    nbInstances = len(data)
+    gains = list()
 
-  def __getEntropySubsets(self, dataset, uniqueValues, currentValue):
-    # subsetEntropy = self.__getEntropySubsets(attribute, uniqueValInAttr, value)
-    return list()
+    # Get all value in one attribute (get each column of the dataset).
+    for attribute in zip(*data):
+      classeSplit = self.__classSpliter(self.__concateTargetWithDataset(attribute, target), attribute)
+      entropys = list()
+      for _key, split in classeSplit.items():
+        size = len(split)
+        subSplit, label = self.__extractTargetFromDataset(split)
+        classDetails = self.__classSpliter(subSplit, label)
+        entropy = self.__getPriorEntropy(subSplit, label, classDetails)
+        entropys.append(size / nbInstances * entropy)
+      gains.append(self.priorEntropy - sum(entropys))
+    print(gains)
 
-  def __getPriorEntropy(self, attribute, uniqueValInAttr):
+  def __getPriorEntropy(self, data, target, classesInfo):
+    nbInstances = len(data)
     entropys = list()
 
-    for value in uniqueValInAttr:
-      entropy = self.__getEntropy(attribute, uniqueValInAttr, value)
+    for _key, value in classesInfo.items():
+      size = len(value)
+      entropy = -(size / nbInstances) * log2(size / nbInstances)
       entropys.append(entropy)
     return sum(entropys)
 
-  def __createTree(self, data, attributeUsed=[]):
-    entropyAttributes = list()
-
-    for attribute in zip(*data):
-      uniqueValue = self.__countUniqueProduct(list(attribute))
-      priorEntropy = self.__getPriorEntropy(attribute, uniqueValue)
-      gain = self.__getGain(attribute, uniqueValue, priorEntropy)
-      entropyAttributes.append(gain)
-    return entropyAttributes
-
   def fit(self, data, target):
     data = self.__transformDataIntoList(data)
-    tree = self.__createTree(data)
+    classesInfo = self.__classSpliter(data, target)
+    self.priorEntropy = self.__getPriorEntropy(data, target, classesInfo)
+    self.__createTree(data, target, classesInfo)
 
   def predict(self, data, target):
     pass
