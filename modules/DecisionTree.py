@@ -67,6 +67,7 @@ class DecisionTree:
         entropys.append(size / nbInstances * entropy)
       gains.append(self.priorEntropy - sum(entropys))
     print(gains)
+    print(gains.index(max(gains)))
 
   def __getPriorEntropy(self, data, target, classesInfo):
     nbInstances = len(data)

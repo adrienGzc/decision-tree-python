@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 
 from modules.Loader import Loader
 from modules.DecisionTree import DecisionTree
+from modules.DecisionTreeGini import DecisionTreeGini
 
 
 def mainTest():
@@ -22,8 +23,9 @@ def mainTest():
 def main():
   loader = Loader()
   irisData = loader.getDataset('iris')
-  decisionTree = DecisionTree()
-  decisionTree.fit(irisData['data'], irisData['target'])
+  decisionTree = DecisionTreeGini()
+  # decisionTree = DecisionTree()
+  decisionTree.fit(irisData['data'][:-50], irisData['target'][:-50])
   # X_train, X_test, y_train, y_test = train_test_split(irisData['data'], irisData['target'], test_size=0.50, random_state=42)
 
 if __name__ == "__main__":
