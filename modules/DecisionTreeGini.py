@@ -54,11 +54,11 @@ class DecisionTreeGini:
       data, target = self.__extractTargetFromDataset(leaf)
       # Get size of the leaf and if 0 then return 0 since there is no data.
       sizeLeaf = len(data)
-      if sizeLeaf == 0: return 0
+      if sizeLeaf == 0: continue
       # Count all instance depending on each classes.
       nbClassElem = self.__countAllElemInList(target)
       # Add the score for each class together.
-      classScore = sum([pow(val / sizeLeaf, 2) for val in nbClassElem.values()])
+      classScore = sum([pow((val / sizeLeaf), 2) for val in nbClassElem.values()])
       giniScore.append((1.0 - classScore) * (sizeLeaf / nbInstances))
     return sum(giniScore)
 
@@ -69,7 +69,7 @@ class DecisionTreeGini:
 
     # According to the subject, lower value to the left and rest at the right.
     for instance in data:
-      if instance[indexAttr] <= splitValue:
+      if instance[indexAttr] < splitValue:
         leftLeaf.append(instance)
       else:
         rightLeaf.append(instance)
@@ -93,14 +93,14 @@ class DecisionTreeGini:
           tree = {'breakpoint': value, 'indexAttr': indexAttr, 'leafs': leafs, 'gini': giniScore}
       indexAttr += 1
     leftLeaf, rightLeaf = tree['leafs']
-    tree.pop('leafs')
     tree['leftLeaf'] = leftLeaf
     tree['rightLeaf'] = rightLeaf
     return tree
 
   def __test(self, leafs):
-    result = self.__countUniqueValue(leafs)
-    return max(result, key=result.count)
+    _data, target = self.__extractTargetFromDataset(leafs)
+    result = self.__countUniqueValue(target)
+    return max(result)
 
   def __recursiveCreation(self, tree, depth, maxDepth):
     # Check empty data in split.
@@ -108,12 +108,12 @@ class DecisionTreeGini:
       joinLeaf = tree['leftLeaf'] + tree['rightLeaf']
       tree['leftLeaf'] = self.__test(joinLeaf)
       tree['rightLeaf'] = self.__test(joinLeaf)
-      return None
+      return
     elif maxDepth is not None and maxDepth >= depth:
       # If maxDepth set then check if value is reach.
       tree['leftLeaf'] = self.__test(tree['leftLeaf'])
       tree['rightLeaf'] = self.__test(tree['rightLeaf'])
-      return None
+      return
     
     # Split left
     tree['leftLeaf'] = self.__foundBestSplit(tree['leftLeaf'])
@@ -131,16 +131,18 @@ class DecisionTreeGini:
     self.__recursiveCreation(self.__tree, 0, self.__maxDepth)
 
   def __displayTree(self, tree, depth):
+    sentence = ''
     if isinstance(tree, dict):
       for _space in range(0, depth):
-        print(' ')
-      print('Attribute: %d, split < %.3f' % (tree['indexAttr'] + 1, tree['breakpoint']))
+        sentence += ' '
+      sentence += 'X%d, value < %.3f, gini: %.3f' % (tree['indexAttr'] + 1, tree['breakpoint'], tree['gini'])
+      print(sentence)
       self.__displayTree(tree['leftLeaf'], depth + 1)
       self.__displayTree(tree['rightLeaf'], depth + 1)
     else:
       for _space in range(0, depth):
-        print(' ')
-      print(tree)
+        sentence += ' '
+      print(sentence, tree)
 
   def show(self):
     if self.__tree is not None:
@@ -153,5 +155,20 @@ class DecisionTreeGini:
     dataset = self.__concateTargetWithDataset(dataset, target)
     self.__createTree(dataset)
 
-  def predict(self):
-    pass
+  def __makePrediction(self, instance, tree):
+    if instance[tree['indexAttr']] > tree['breakpoint']:
+      
+
+  # Make prediction on an instance or a list.
+  def predict(self, dataset):
+    if self.__tree is None:
+      print('Error: You need to fit the decision tree first with fit(dataset, target).')
+      return 84
+    
+    predictions = list()
+    if isinstance(dataset, list)
+      self.__makePrediction(dataset, self.__tree)
+    else:
+      for instance in dataset
+        predictions.append(self.__makePrediction(instance, self.__tree))
+      return predictions
