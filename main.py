@@ -23,11 +23,12 @@ def mainTest():
 def main():
   loader = Loader()
   irisData = loader.getDataset('iris')
+  X_train, X_test, y_train, y_test = train_test_split(irisData['data'], irisData['target'], test_size=0.80, random_state=42)
   decisionTree = DecisionTreeGini()
-  # decisionTree = DecisionTree()
-  decisionTree.fit(irisData['data'], irisData['target'])
-  decisionTree.show()
-  # X_train, X_test, y_train, y_test = train_test_split(irisData['data'], irisData['target'], test_size=0.50, random_state=42)
+  decisionTree.fit(X_train, y_train)
+  # decisionTree.show()
+  predictions = decisionTree.predict(X_test, y_test)
+  print(predictions)
 
 if __name__ == "__main__":
     main()
