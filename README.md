@@ -1,4 +1,8 @@
-# decision-tree-python
-Machine learning assignment 2
+# Decision Tree in Python
 
-QT_QPA_PLATFORM=xcb
+Machine learning assignment 2 at Jönköping University.
+
+Check the Jupyter Notebook for a better understanding of the code and the choices made.
+
+
+Enjoy :).

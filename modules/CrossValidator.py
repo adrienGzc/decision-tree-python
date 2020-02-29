@@ -1,15 +1,19 @@
 import random
 import copy
-from functools import reduce
 
 class CrossValidator:
   def __init__(self, algo=None, dataset=None, nbFolds=10):
     random.seed(1)
     self.folds = list()
     self.algorithm = algo
-    self.dataset = list(dataset)
+    self.dataset = self.__transformDataIntoList(dataset)
     self.nbFolds = nbFolds
     self.rocData = list()
+
+  def __transformDataIntoList(self, data):
+    if data is not None:
+      return [list(instance) for instance in data]
+    return None
 
   # Method to check if the CrossValidator class as everything needed to start.
   def __checkNotEmptyAttributes(self):
@@ -36,9 +40,14 @@ class CrossValidator:
       end = foldSize + start
       self.folds.append(copyDataset[start:end])
 
-  # Extract the label (target) from a dataset, it must be the last column.
-  def __getTargetFromData(self, dataset):
-    return [instance.pop(-1) for instance in dataset]
+  # Return the taget label from the dataset, target as to be at the end.
+  def __extractTargetFromDataset(self, data):
+    newDataset = list()
+    target = list()
+    for instance in data:
+      target.append(instance[len(instance) - 1])
+      newDataset.append(list(instance[:-1][0]))
+    return newDataset, target
 
   # Count the correct answer and return the accuracy of them, scaled on 0 to 100%.
   def __getAccuracy(self, original, predictions):
@@ -83,16 +92,16 @@ class CrossValidator:
     for index, fold in enumerate(self.folds):
       trainData = self.__getTrainData(self.folds, index)
       # Extract the label from the dataset.
-      targetTrain = self.__getTargetFromData(trainData)
+      X_train, targetTrain = self.__extractTargetFromDataset(trainData)
       testData = copy.deepcopy(fold)
-      targetTest = self.__getTargetFromData(testData)
+      X_test, targetTest = self.__extractTargetFromDataset(testData)
 
       # Train the Naive Bayes algorithm.
-      self.algorithm.fit(trainData, targetTrain, False)
+      self.algorithm.fit(X_train, targetTrain)
       # Predict with the fold.
-      predictionFold = self.algorithm.predict(testData)
+      acc, predictionFold = self.algorithm.predict(X_test, targetTest)
       # Add to the data for the ROC the prediction information with the target label.
       self.rocData.extend(self.__appendTargetToPrediction(targetTest, predictionFold))
       # Add the accuracy calculate.
-      accuracyScores.append(self.__getAccuracy(targetTest, predictionFold))
+      accuracyScores.append(acc)
     return accuracyScores, sum(accuracyScores) / len(accuracyScores), self.rocData
